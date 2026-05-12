@@ -4,8 +4,6 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /Status1
         - /Map1/Topic1
       Splitter Ratio: 0.5
     Tree Height: 1068
@@ -81,7 +79,7 @@ Visualization Manager:
       Max Intensity: 4096
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: LaserScan
+      Name: LaserScan (Raw)
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
@@ -152,14 +150,14 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-      Name: RobotModel
+      Name: RobotModel (Main)
       TF Prefix: ""
       Update Interval: 0
       Value: true
       Visual Enabled: true
     - Class: rviz_default_plugins/Marker
       Enabled: true
-      Name: Marker
+      Name: Marker (Gap range)
       Namespaces:
         gap_boundaries: true
       Topic:
@@ -171,7 +169,7 @@ Visualization Manager:
       Value: true
     - Class: rviz_default_plugins/Marker
       Enabled: true
-      Name: Marker
+      Name: Marker (Steering)
       Namespaces:
         steering_target: true
       Topic:
@@ -184,8 +182,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 1.545182466506958
-        Min Value: 0.012481688521802425
+        Max Value: 7.953848361968994
+        Min Value: 3.9919466972351074
         Value: true
       Axis: X
       Channel Name: intensity
@@ -199,7 +197,7 @@ Visualization Manager:
       Max Intensity: 4096
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: LaserScan
+      Name: LaserScan (Extended)
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
@@ -213,6 +211,30 @@ Visualization Manager:
         Value: /virtual_scan
       Use Fixed Frame: true
       Use rainbow: true
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Marker (Safety Bubble)
+      Namespaces:
+        safety_bubble: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /safety_bubble
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Marker (Target point)
+      Namespaces:
+        target_point: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /target_point
       Value: true
   Enabled: true
   Global Options:
@@ -257,7 +279,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/ThirdPersonFollower
-      Distance: 5.137230396270752
+      Distance: 8.794689178466797
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
