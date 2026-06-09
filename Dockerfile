@@ -8,11 +8,6 @@ RUN apt-get update && apt-get install -y locales \
     && rm -rf /var/lib/apt/lists/*
 ENV LANG=en_US.UTF-8
 ENV ROS_DOMAIN_ID=22
-ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-
-# 3. Cyclone DDS Configuration for Shared Memory
-COPY ./cyclonedds.xml /cyclonedds.xml
-ENV CYCLONEDDS_URI=file:///cyclonedds.xml
 
 # 4. Additional installations
 RUN apt-get update && apt-get install -y \ 
@@ -31,9 +26,22 @@ RUN apt-get update && apt-get install -y \
     ros-foxy-rqt \
     ros-foxy-rmw-cyclonedds-cpp \
     ros-foxy-rqt-common-plugins \
+    ros-foxy-slam-toolbox \
+    ros-foxy-cartographer \
+    ros-foxy-cartographer-ros \
+    ros-foxy-navigation2 \
+    ros-foxy-nav2-bringup \
     ros-foxy-asio-cmake-module \
     ros-foxy-joy \
+    ros-foxy-urg-node \
+    ros-foxy-xacro \
+    ros-foxy-robot-state-publisher \
+    ros-foxy-joy-teleop \
     ros-foxy-ackermann-msgs \
+    ros-foxy-diagnostic-updater \
+    libgl1-mesa-glx \
+    libgl1-mesa-dri \
+    mesa-utils \
     && rm -rf /var/lib/apt/lists/* \
     && rosdep init || true \
     && rosdep update

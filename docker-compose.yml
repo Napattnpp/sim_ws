@@ -12,7 +12,7 @@ services:
     environment:
       - DISPLAY=novnc:0.0
       - ROS_DOMAIN_ID=22
-      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - LIBGL_ALWAYS_SOFTWARE=1
     volumes:
       # Kept hardware mounts (vital if you are plugging in a physical Joystick/Gamepad for the sim)
       - /dev:/dev
@@ -20,6 +20,7 @@ services:
       - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
       - /tmp/argus_socket:/tmp/argus_socket
       - /tmp/.X11-unix:/tmp/.X11-unix
+      - .:/sim_ws
     networks:
       - x11
     stdin_open: true 
@@ -28,6 +29,7 @@ services:
 
   novnc:  
     image: theasp/novnc:latest
+    platform: linux/amd64
     container_name: f1tenth_novnc
     profiles: ["f1tenth-sim"]  # <--- Added profile so it boots with the sim!
     environment:
