@@ -1,6 +1,10 @@
 # F1TENTH gym environment ROS2 communication bridge
 This is a containerized ROS communication bridge for the F1TENTH gym environment that turns it into a simulation in ROS2.
 
+## Docker
+`docker compose --profile f1tenth-sim up -d` \
+http://localhost:8080/vnc.html
+
 ## Native on Ubuntu 20.04
 
 **Install the following dependencies:**

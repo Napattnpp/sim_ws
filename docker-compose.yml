@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  sim:
+    image: napattnpp/f110th_img:f1tenth-sim
+    container_name: f1tenth_sim
+    profiles: ["f1tenth-sim"]  
+    # Removed network_mode: host so it can use the x11 network
+    ipc: host
+    pid: host
+    privileged: true
+    environment:
+      - DISPLAY=novnc:0.0
+      - ROS_DOMAIN_ID=22
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+    volumes:
+      # Kept hardware mounts (vital if you are plugging in a physical Joystick/Gamepad for the sim)
+      - /dev:/dev
+      - /run/udev:/run/udev:ro
+      - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
+      - /tmp/argus_socket:/tmp/argus_socket
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    networks:
+      - x11
+    stdin_open: true 
+    tty: true        
+    command: /bin/bash
+
+  novnc:  
+    image: theasp/novnc:latest
+    container_name: f1tenth_novnc
+    profiles: ["f1tenth-sim"]  # <--- Added profile so it boots with the sim!
+    environment:
+      - DISPLAY_WIDTH=1728
+      - DISPLAY_HEIGHT=972
+    ports:
+      - "8080:8080"
+    networks:
+      - x11
+
+networks:
+  x11:
