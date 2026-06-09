@@ -53,7 +53,8 @@ RUN pip3 install transforms3d
 # 5. Install f1tenth gym dependencies
 RUN git clone https://github.com/f1tenth/f1tenth_gym /f1tenth_gym \
     && cd /f1tenth_gym \
-    && pip3 install -e .
+    && pip3 install -e . \
+    && pip3 install gym
 
 # 6. Configuring environment
 RUN echo "source /opt/ros/foxy/setup.bash" >> ~/.bashrc
