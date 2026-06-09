@@ -1,0 +1,10 @@
+# Colcon build directories
+build/
+install/
+log/
+
+# Optional: Ignore common local workspace artifacts
+.colcon/
+.vscode/
+**/__pycache__/
+*.pyc
