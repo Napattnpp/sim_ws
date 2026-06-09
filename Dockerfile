@@ -31,6 +31,8 @@ RUN apt-get update && apt-get install -y \
     ros-foxy-cartographer-ros \
     ros-foxy-navigation2 \
     ros-foxy-nav2-bringup \
+    ros-foxy-nav2-lifecycle-manager \
+    ros-foxy-nav2-lifecycle-bringup \
     ros-foxy-asio-cmake-module \
     ros-foxy-joy \
     ros-foxy-urg-node \
