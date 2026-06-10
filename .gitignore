@@ -8,3 +8,6 @@ log/
 .vscode/
 **/__pycache__/
 *.pyc
+
+frames.pdf
+frames.gv
