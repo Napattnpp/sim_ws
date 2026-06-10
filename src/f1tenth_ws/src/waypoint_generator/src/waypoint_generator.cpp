@@ -13,7 +13,7 @@
 WaypointGenerator::WaypointGenerator() : Node("waypoint_generator_node") {
     this->declare_parameter("odom_topic", "/ego_racecar/odom");
     this->declare_parameter("min_distance", 0.05);
-    this->declare_parameter("save_path", "/home/ubuntu/sim_ws/src/f1tenth_ws/racelines/waypoints_odom.csv");
+    this->declare_parameter("save_path", "/home/focal/sim_ws/src/f1tenth_ws/racelines/waypoints_odom.csv");
 
     odom_topic = this->get_parameter("odom_topic").as_string();
     min_distance = this->get_parameter("min_distance").as_double();

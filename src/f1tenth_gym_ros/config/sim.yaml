@@ -43,8 +43,8 @@ bridge:
     scan_beams: 1080
 
     # map parameters
-    # map_path: '/home/ubuntu/sim_ws/src/f1tenth_gym_ros/maps/levine_blocked'
-    map_path: '/home/ubuntu/sim_ws/src/f1tenth_gym_ros/maps/levine_obs'
+    # map_path: '/home/focal/sim_ws/src/f1tenth_gym_ros/maps/levine_blocked'
+    map_path: '/home/focal/sim_ws/src/f1tenth_gym_ros/maps/levine_obs'
     map_img_ext: '.png'
 
     # opponent parameters
