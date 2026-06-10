@@ -38,9 +38,14 @@ RUN apt-get update && apt-get install -y \
     ros-foxy-urg-node \
     ros-foxy-xacro \
     ros-foxy-robot-state-publisher \
+    ros-foxy-tf-transformations \
+    ros-foxy-control-msgs \
     ros-foxy-joy-teleop \
+    ros-foxy-teleop-tools \
     ros-foxy-ackermann-msgs \
     ros-foxy-diagnostic-updater \
+    dependency-tracking \
+    libeigen-dev \
     libgl1-mesa-glx \
     libgl1-mesa-dri \
     mesa-utils \
