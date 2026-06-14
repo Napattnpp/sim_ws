@@ -75,9 +75,15 @@ def generate_launch_description():
         # remappings=[('ackermann_cmd', 'drive')]
     )
 
+    aeb_node = Node(
+        package='safety_node',
+        executable='safety_node_cpp',
+        name='safety_node_cpp'
+    )
+
     # finalize
     ld.add_action(joy_node)
     ld.add_action(joy_teleop_node)
     ld.add_action(ackermann_mux_node)
-
+    ld.add_action(aeb_node)
     return ld
