@@ -32,7 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from joy_teleop_testing_common import generate_joy_test_description, TestJoyTeleop
+from f1tenth_system.teleop_tools.joy_teleop.test.joy_teleop_testing_common import generate_joy_test_description, TestJoyTeleop
 import pytest
 import rclpy
 import std_srvs.srv

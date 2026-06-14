@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import example_interfaces.srv
-from joy_teleop_testing_common import generate_joy_test_description, TestJoyTeleop
+from f1tenth_system.teleop_tools.joy_teleop.test.joy_teleop_testing_common import generate_joy_test_description, TestJoyTeleop
 import pytest
 import rclpy
 

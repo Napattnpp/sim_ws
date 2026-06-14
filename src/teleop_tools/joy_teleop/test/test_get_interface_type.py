@@ -32,8 +32,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from joy_teleop.joy_teleop import get_interface_type
-from joy_teleop.joy_teleop import JoyTeleopException
+from f1tenth_system.teleop_tools.joy_teleop.joy_teleop.joy_teleop import get_interface_type
+from f1tenth_system.teleop_tools.joy_teleop.joy_teleop.joy_teleop import JoyTeleopException
 
 import pytest
 

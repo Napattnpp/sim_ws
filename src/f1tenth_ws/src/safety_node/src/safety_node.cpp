@@ -4,6 +4,7 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
+#include "std_msgs/msg/bool.hpp"
 
 using std::placeholders::_1;
 
@@ -13,22 +14,35 @@ class Safety : public rclcpp::Node {
    public:
     Safety() : Node("safety_node_cpp") {
         publisher_ = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("drive", 10);
+        teleop_publisher_ = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("teleop", 10);
         scan_subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>("scan", 10, std::bind(&Safety::scan_callback, this, _1));
         odom_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ego_racecar/odom", 10, std::bind(&Safety::odom_callback, this, _1));
+        aeb_subscription_ = this->create_subscription<std_msgs::msg::Bool>("aeb_active", 10, std::bind(&Safety::aeb_callback, this, _1));
     }
 
    private:
     double speed = 0.0;
+    bool aeb_active = false;
 
     rclcpp::Publisher<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr publisher_;
+    rclcpp::Publisher<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr teleop_publisher_;
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_subscription_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscription_;
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr aeb_subscription_;
 
     void odom_callback(const nav_msgs::msg::Odometry::ConstSharedPtr msg) {
         this->speed = msg->twist.twist.linear.x;
     }
 
+    void aeb_callback(const std_msgs::msg::Bool::ConstSharedPtr msg) {
+        this->aeb_active = msg->data;
+    }
+
     void scan_callback(const sensor_msgs::msg::LaserScan::ConstSharedPtr scan_msg) {
+        if (!this->aeb_active) {
+            return;
+        }
+
         /// calculate TTC
         bool emergency_breaking = false;
         for (std::size_t i = 0; i < scan_msg->ranges.size(); i++) {
@@ -48,6 +62,7 @@ class Safety : public rclcpp::Node {
             drive_msg.drive.speed = 0.0;
             RCLCPP_INFO(this->get_logger(), "emergency brake engaged at speed '%f'", this->speed);  // Output to log;
             this->publisher_->publish(drive_msg);
+            this->teleop_publisher_->publish(drive_msg);
         }
     }
 };

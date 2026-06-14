@@ -87,6 +87,11 @@ class JoyTeleopCommand:
             self.buttons = ['default']
             # raise JoyTeleopException("No buttons or axes configured for command '{}'".format(name))
 
+        self.toggle_mode = bool(config.get('toggle_mode', False))
+        self.suppress_default = bool(config.get('suppress_default', self.toggle_mode))
+        self.last_active = False
+        self._last_pressed = False
+
         # Used to short-circuit the run command if there aren't enough buttons in the message.
         self.min_button = 0
         if len(self.buttons) > 0 and 'default' not in self.buttons:
@@ -100,22 +105,22 @@ class JoyTeleopCommand:
         # is a command-specific behavior, the base class only provides the mechanism.
         self.active = False
 
-    def update_active_from_buttons_and_axes(self, joy_state: sensor_msgs.msg.Joy) -> None:
-        self.active = False
+    def _pressed_from_buttons_and_axes(self, joy_state: sensor_msgs.msg.Joy) -> bool:
+        pressed = False
 
         if (self.min_button is not None and len(joy_state.buttons) <= self.min_button) and \
            (self.min_axis is not None and len(joy_state.axes) <= self.min_axis):
             # Not enough buttons or axes, so it can't possibly be a message for this command.
-            return
+            return pressed
 
         for button in self.buttons:
             if button == 'default' and sum(joy_state.buttons) == 0:
-                self.active = True
+                pressed = True
             elif button == 'default' and sum(joy_state.buttons) > 0:
                 pass
             else:
                 try:
-                    self.active |= joy_state.buttons[button] == 1
+                    pressed |= joy_state.buttons[button] == 1
                 except IndexError:
                     # An index error can occur if this command is configured for multiple buttons
                     # like (0, 10), but the length of the joystick buttons is only 1.  Ignore these.
@@ -123,11 +128,33 @@ class JoyTeleopCommand:
 
         for axis in self.axes:
             try:
-                self.active |= joy_state.axes[axis] == 1.0
+                pressed |= joy_state.axes[axis] == 1.0
             except IndexError:
                 # An index error can occur if this command is configured for multiple buttons
                 # like (0, 10), but the length of the joystick buttons is only 1.  Ignore these.
                 pass
+
+        return pressed
+
+    def update_active_from_buttons_and_axes(self, joy_state: sensor_msgs.msg.Joy) -> None:
+        self.last_active = self.active
+        pressed = self._pressed_from_buttons_and_axes(joy_state)
+
+        if self.toggle_mode:
+            if pressed and not self._last_pressed:
+                self.active = not self.active
+            self._last_pressed = pressed
+        else:
+            self.active = pressed
+
+    def is_default_command(self) -> bool:
+        return self.buttons == ['default'] and len(self.axes) == 0
+
+    def is_active_toggle(self) -> bool:
+        return self.toggle_mode and self.active
+
+    def suppresses_default_command(self) -> bool:
+        return self.is_active_toggle() and self.suppress_default
 
 
 class JoyTeleopTopicCommand(JoyTeleopCommand):
@@ -142,6 +169,9 @@ class JoyTeleopTopicCommand(JoyTeleopCommand):
         # A 'message_value' is a fixed message that is sent in response to an activation.  It is
         # mutually exclusive with an 'axis_mapping'.
         self.msg_value = None
+        self.publish_toggle_state = bool(config.get('publish_toggle_state', False))
+        self.inverted = bool(config.get('inverted', False))
+        self.first_run = True
         if 'message_value' in config:
             msg_config = config['message_value']
 
@@ -187,10 +217,11 @@ class JoyTeleopTopicCommand(JoyTeleopCommand):
 
         self.pub = node.create_publisher(self.topic_type, config['topic_name'], qos)
 
-    def run(self, node: Node, joy_state: sensor_msgs.msg.Joy) -> None:
+    def run(self, node: Node, joy_state: sensor_msgs.msg.Joy,
+            toggle_command_active: bool = False) -> None:
         # The logic for responding to this joystick press is:
         # 1.  Save off the current state of active.
-        # 2.  Update the current state of active based on buttons and axes.
+        # 2.  The current state of active has already been updated based on buttons and axes.
         # 3.  If this command is currently not active, return without publishing.
         # 4.  If this is a msg_value, and the value of the previous active is the same as now,
         #     debounce and return without publishing.
@@ -198,16 +229,30 @@ class JoyTeleopTopicCommand(JoyTeleopCommand):
         #     transitioned from 0 -> 1, or it means that this is an axis mapping and data should
         #     continue to be published without debouncing.
 
-        last_active = self.active
-        self.update_active_from_buttons_and_axes(joy_state)
+        last_active = self.last_active
+        if self.is_default_command() and toggle_command_active:
+            return
         if not self.active:
+            if self.msg_value is not None and self.toggle_mode and self.publish_toggle_state and \
+               (self.first_run or last_active != self.active):
+                self.first_run = False
+                msg = self.topic_type()
+                val = not self.active if self.inverted else self.active
+                set_member(msg, 'data', val)
+                self.pub.publish(msg)
             return
-        if self.msg_value is not None and last_active == self.active:
+        if self.msg_value is not None and not self.first_run and last_active == self.active:
             return
+        self.first_run = False
 
         if self.msg_value is not None:
             # This is the case for a static message.
-            msg = self.msg_value
+            if self.toggle_mode and self.publish_toggle_state:
+                msg = self.topic_type()
+                val = not self.active if self.inverted else self.active
+                set_member(msg, 'data', val)
+            else:
+                msg = self.msg_value
         else:
             # This is the case to forward along mappings.
             msg = self.topic_type()
@@ -270,10 +315,11 @@ class JoyTeleopServiceCommand(JoyTeleopCommand):
         self.service_client = node.create_client(service_type, service_name)
         self.client_ready = False
 
-    def run(self, node: Node, joy_state: sensor_msgs.msg.Joy) -> None:
+    def run(self, node: Node, joy_state: sensor_msgs.msg.Joy,
+            toggle_command_active: bool = False) -> None:
         # The logic for responding to this joystick press is:
         # 1.  Save off the current state of active.
-        # 2.  Update the current state of active.
+        # 2.  The current state of active has already been updated.
         # 3.  If this command is currently not active, return without calling the service.
         # 4.  Save off the current state of whether the service was ready.
         # 5.  Update whether the service is ready.
@@ -283,8 +329,7 @@ class JoyTeleopServiceCommand(JoyTeleopCommand):
         # 8.  In all other cases, call the service.  This means that either this is a button
         #     transition 0 -> 1, or that the service became ready since the last call.
 
-        last_active = self.active
-        self.update_active_from_buttons_and_axes(joy_state)
+        last_active = self.last_active
         if not self.active:
             return
         last_ready = self.client_ready
@@ -319,10 +364,11 @@ class JoyTeleopActionCommand(JoyTeleopCommand):
         self.action_client = ActionClient(node, action_type, action_name)
         self.client_ready = False
 
-    def run(self, node: Node, joy_state: sensor_msgs.msg.Joy) -> None:
+    def run(self, node: Node, joy_state: sensor_msgs.msg.Joy,
+            toggle_command_active: bool = False) -> None:
         # The logic for responding to this joystick press is:
         # 1.  Save off the current state of active.
-        # 2.  Update the current state of active.
+        # 2.  The current state of active has already been updated.
         # 3.  If this command is currently not active, return without calling the action.
         # 4.  Save off the current state of whether the action was ready.
         # 5.  Update whether the action is ready.
@@ -332,8 +378,7 @@ class JoyTeleopActionCommand(JoyTeleopCommand):
         # 8.  In all other cases, call the action.  This means that either this is a button
         #     transition 0 -> 1, or that the action became ready since the last call.
 
-        last_active = self.active
-        self.update_active_from_buttons_and_axes(joy_state)
+        last_active = self.last_active
         if not self.active:
             return
         last_ready = self.client_ready
@@ -410,7 +455,13 @@ class JoyTeleop(Node):
 
     def joy_callback(self, msg: sensor_msgs.msg.Joy) -> None:
         for command in self.commands:
-            command.run(self, msg)
+            command.update_active_from_buttons_and_axes(msg)
+
+        toggle_command_active = any(command.suppresses_default_command()
+                                    for command in self.commands)
+
+        for command in self.commands:
+            command.run(self, msg, toggle_command_active)
 
 
 def main(args=None):

@@ -28,6 +28,7 @@ class SafetyNode(Node):
         """
 
         self.speed = 0.0
+        self.aeb_active = False
         # Create ROS subscribers and publishers.
         self.scan_subscription = self.create_subscription( # Subscribe to the scan topic
             LaserScan,
@@ -42,6 +43,13 @@ class SafetyNode(Node):
             self.odom_callback,
             10
         )
+
+        self.aeb_subscription = self.create_subscription(
+            Bool,
+            'aeb_active',
+            self.aeb_callback,
+            10
+        )
         
         # Update the speed of the car
         self.publisher_ = self.create_publisher(AckermannDriveStamped, 'drive', 1000)
@@ -52,7 +60,13 @@ class SafetyNode(Node):
         # Update current speed
         self.speed = odom_msg.twist.twist.linear.x
 
+    def aeb_callback(self, aeb_msg):
+        self.aeb_active = aeb_msg.data
+
     def scan_callback(self, scan_msg):
+        if not self.aeb_active:
+            return
+
         # Calculate TTC
         emergency_breaking = False
         for idx, r in enumerate(scan_msg.ranges):
